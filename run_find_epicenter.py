@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-import find_epicenter as fe
+import find_epicenter_dict as fe
 
 def main():
     wmap_path=sys.argv[1]
