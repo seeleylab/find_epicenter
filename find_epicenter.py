@@ -2,7 +2,7 @@ import nibabel as nib
 import numpy as np
 
 # There are 482 parcels in v14, which will be stored in a dictionary
-L = {x: nib.load('/data/mridata/jbrown/hcp/v14/vol_%d.nii' % x).get_data() for x in range(1, 483)}
+L = {x: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % x).get_data() for x in range(1, 273)}
 
 def dicecoef(a, b):
     """Returns the Dice coefficient of a and b.
@@ -21,7 +21,7 @@ def dicecoef(a, b):
     overlap = len(a_voxels & b_voxels)
     return round(overlap * 2.0/(len(a_voxels) + len(b_voxels)), 3)
 
-def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata/jbrown/brains/merged_ho_cereb_stn_max_bin.nii'):
+def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
     """
     Returns the parcel that is the epicenter for a subject.
     
@@ -63,11 +63,11 @@ def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata
         parcel = np.nonzero(parcel)[0]
         if len(set(parcel) & set(mask_thr_wmap)) >= n_overlap:
             # Replace parcel with seed map data
-            L[i] = nib.load('/data/mridata/jbrown/hcp/v14/vol_%d_mean_fc_v2.nii' % i).get_data().ravel()
+            L[i] = nib.load('/data/mridata/jdeng/sd_bvftd/100_controls/1ST_vol_%s/spmT_0001.nii' % i).get_data().ravel()
         else:
             # otherwise remove parcel from consideration as epicenter
             del L[i]
-    
+        
     # Threshold each seed map
     for i in L.keys():
         # uncomment if FC_thr is an absolute cutoff
@@ -77,7 +77,7 @@ def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata
         FC_thr_val = np.percentile(L[i][L[i] != 0], FC_thr)
         L[i] = np.nonzero(L[i] >= FC_thr_val)[0]
 
-    # Get the best-fitting thresholded seed map to the masked & thresholded wmap by taking the thresholded seed map with the greatest Dice coefficient to the wmap
+    # Get the best-fitting thresholded seed map(s) to the masked & thresholded wmap by taking the thresholded seed map with the greatest Dice coefficient to the wmap
     for i in L.keys():
         L[i] = dicecoef(mask_thr_wmap, L[i])
     
@@ -88,11 +88,15 @@ def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata
     pid = wmap_path.split("/")[4].split("_")[0]
     date = wmap_path.split("/")[4].split("_")[1]
     # uncomment if only the top epicenter and its Dice coefficient is wanted
-    # print('%s %s vol_%d.nii %f' % (pid, date, max(L, key=L.get), max(L.values())))    
+    print('%s %s vol_%d.nii %f' % (pid, date, max(L, key=L.get), max(L.values())))    
     
-    # uncomment if top 3 epicenters and their Dice coefficients are wanted
+    # # uncomment if top 3 epicenters and their Dice coefficients are wanted
     # first = sorted(L, key=L.get)[-1]; second = sorted(L, key=L.get)[-2]; third = sorted(L, key=L.get)[-3]
     # print('%s %s vol_%d.nii vol_%d.nii vol_%d.nii %f %f %f %f %f %f' % (pid, date, first, second, third, L[first], L[second], L[third], L_z[first], L_z[second], L_z[third]))
     
-    # uncomment if a file containing all Dice coefficients is wanted
-    np.savetxt("/".join(wmap_path.split("/")[:5])+'/struc/epicenters/dice_coefficients.txt', sorted(L_z.values()), fmt='%1.3f')
+    # # uncomment if a file containing all Dice coefficients is wanted
+    # np.savetxt("/".join(wmap_path.split("/")[:5])+'/struc/epicenters/dice_coefficients.txt', sorted(L_z.values()), fmt='%1.3f')
+    
+    # # addendum code to return top 4 epicenters for Jesse's group map
+    # first = sorted(L, key=L.get)[-1]; second = sorted(L, key=L.get)[-2]; third = sorted(L, key=L.get)[-3]; fourth = sorted(L, key=L.get)[-4]
+    # print('vol_%d.nii vol_%d.nii vol_%d.nii vol_%d.nii %f %f %f %f %f %f %f %f' % (first, second, third, fourth, L[first], L[second], L[third], L[fourth], L_z[first], L_z[second], L_z[third], L_z[fourth]))
