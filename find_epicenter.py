@@ -1,44 +1,17 @@
 import nibabel as nib
 import numpy as np
+import pickle
 
-def mask_image(img_path, mask_path):
-	"""Mask image.
-
-	Parameters
-	----------
-	img_path : str
-		Absolute path to a .nii image.
-	mask_path : str
-		Absolute path to a .nii mask image.
-
-	Returns
-	-------
-	masked_image: ndarray
-		Masked image as a 1D array of voxel values.
+def return_indices_of_masked_thr_voxels(img_path, mask_path, threshold_level):
+	"""
 	"""
 	raw_image = nib.load(img_path).get_data()
 	mask = nib.load(mask_path).get_data()
-	mask = np.ma.make_mask(mask)
-	masked_image = raw_image[mask]
-	return masked_image
-
-def threshold_image(img_data, threshold_level):
-	"""Threshold image.
-
-	Parameters
-	----------
-	img_data : ndarray
-		Image in the form of a 1D array of voxel values.
-	threshold_level : int or float
-		Defines cutoff for which any voxels greater than or equal to this value will be kept; otherwise the voxels will be zeroed out.
-
-	Returns
-	-------
-	thresholded_image: ndarray
-		Thresholded image as a 1D array of voxel values.
-	"""
-	thresholded_image = img_data[img_data >= threshold_level]
-	return thresholded_image
+	in_mask_voxels_boolean = np.ma.make_mask(mask)
+	above_threshold_voxels_boolean = raw_image > threshold_level
+	in_mask_and_above_threshold_voxels_boolean = in_mask_voxels_boolean & above_threshold_voxels_boolean
+	in_mask_and_above_threshold_voxels_indices = np.where(in_mask_and_above_threshold_voxels_boolean)
+	return in_mask_and_above_threshold_voxels_indices
 
 def keep_if_overlap_by(img_data, min_overlap):
 	"""Keep the parcel as an epicenter candidate if it shares at least the specified number of voxels of overlap with the image.
@@ -55,8 +28,7 @@ def keep_if_overlap_by(img_data, min_overlap):
 	epicenter_candidates : dict
 		Dictionary of candidate epicenters, with key-value pairs representing epicenter index and .
 	"""
-	parcel_dict = {parcel_index: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % parcel_index).get_data() for parcel_index in range(1, 274)}
-	
+	parcel_dict = pickle.load(open('/data/mridata/jdeng/tools/find_epicenter/brainnetome_suit_comb_274_parcel_dict.p', 'r'))
 	for i in parcel_dict.keys():
 		parcel = parcel_dict[i].ravel()
 		parcel = np.nonzero(parcel)[0]
