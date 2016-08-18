@@ -1,7 +1,7 @@
 import nibabel as nib
 import numpy as np
 
-# There are 482 parcels in v14, which will be stored in a dictionary
+# Store the parcels in a dictionary with key-value pairs corresponding to parcel ID and parcel absolute path
 L = {x: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % x).get_data() for x in range(1, 273)}
 
 def dicecoef(a, b):
@@ -81,4 +81,4 @@ def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata
     # top 10 epicenters and Dice coefficients
     pid = wmap_path.split("/")[4].split("_")[0]
     date = wmap_path.split("/")[4].split("_")[1]
-    print '%s %s' % (pid, date), np.array(parcel_IDs)[sorted_indices][-1:-10:-1], np.array(dice_coefficients)[sorted_indices][-1:-10:-1]
+    print '%s %s' % (pid, date), np.array(parcel_IDs)[sorted_indices][-1:-11:-1], np.array(dice_coefficients)[sorted_indices][-1:-11:-1]
