@@ -1,73 +1,73 @@
 import nibabel as nib
 import numpy as np
+import pickle
 
-def mask_image(img_path, mask_path):
-	"""Mask image.
-
-	Parameters
-	----------
-	img_path : str
-		Absolute path to a .nii image.
-	mask_path : str
-		Absolute path to a .nii mask image.
-
-	Returns
-	-------
-	masked_image: ndarray
-		Masked image as a 1D array of voxel values.
-	"""
-	raw_image = nib.load(img_path).get_data()
-	mask = nib.load(mask_path).get_data()
-	mask = np.ma.make_mask(mask)
-	masked_image = raw_image[mask]
-	return masked_image
-
-def threshold_image(img_data, threshold_level):
-	"""Threshold image.
-
+def threshold_image_using_percentile_threshold(img_data, percentile_threshold_level):
+	"""Threshold image using a percentile threshold.
 	Parameters
 	----------
 	img_data : ndarray
 		Image in the form of a 1D array of voxel values.
 	threshold_level : int or float
 		Defines cutoff for which any voxels greater than or equal to this value will be kept; otherwise the voxels will be zeroed out.
-
 	Returns
 	-------
-	thresholded_image: ndarray
-		Thresholded image as a 1D array of voxel values.
+	thresholded_image_indices: ndarray
+		Indices of thresholded image as a 1D array of voxel values.
 	"""
-	thresholded_image = img_data[img_data >= threshold_level]
-	return thresholded_image
+	nonzero_img_data = img_data[img_data != 0]
+	img_threshold = np.percentile(nonzero_img_data, percentile_threshold_level)
+	thresholded_image = img_data >= img_threshold
+	thresholded_image_indices = np.where(thresholded_image.ravel())[0]
+	return thresholded_image_indices
 
-def keep_if_overlap_by(img_data, min_overlap):
+def return_indices_of_masked_thr_voxels(img_path, threshold_level, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
+	"""
+	"""
+	raw_image = nib.load(img_path).get_data().ravel()
+	mask = nib.load(mask_path).get_data().ravel()
+	in_mask_voxels_boolean = np.ma.make_mask(mask)
+	above_threshold_voxels_boolean = raw_image > threshold_level
+	in_mask_and_above_threshold_voxels_boolean = in_mask_voxels_boolean & above_threshold_voxels_boolean
+	in_mask_and_above_threshold_voxels_indices = np.where(in_mask_and_above_threshold_voxels_boolean)[0]
+	return in_mask_and_above_threshold_voxels_indices
+
+def filter_epicenters_by_parcel_overlap(img_indices, min_overlap):
 	"""Keep the parcel as an epicenter candidate if it shares at least the specified number of voxels of overlap with the image.
 	
 	Parameters
 	----------
-	img_data : ndarray
-		Image in the form of a 1D array of voxel values.
+	img_indices : ndarray
+		Indices in the image.
 	min_overlap : int or float
 		Defines cutoff for which a parcel that overlaps the image by any number of voxels greater than or equal to this cutoff will be kept.
 
 	Returns
 	-------
-	epicenter_candidates : dict
-		Dictionary of candidate epicenters, with key-value pairs representing epicenter index and .
+	epicenter_candidates : list
+		List of candidate epicenter indices.
 	"""
-	parcel_dict = {parcel_index: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % parcel_index).get_data() for parcel_index in range(1, 274)}
+	epicenter_candidates = []
+	epicenter_parcel_dict = pickle.load(open('/data/mridata/jdeng/tools/find_epicenter/epicenter_parcel_dict.p', 'r'))
 	
-	for i in parcel_dict.keys():
-		parcel = parcel_dict[i].ravel()
-		parcel = np.nonzero(parcel)[0]
-		if len(set(parcel) & set(mask_thr_wmap)) >= n_overlap:
-			# Replace parcel with seed map data
-			L[i] = nib.load('/data/mridata/jdeng/sd_bvftd/100_controls/1ST_vol_%s/spmT_0001.nii' % i).get_data().ravel()
-		else:
-			# otherwise remove parcel from consideration as epicenter
-			del L[i]
-	return
+	for i in epicenter_parcel_dict.keys():
+		parcel = epicenter_parcel_dict[i].ravel()
+		parcel_indices = np.nonzero(parcel)[0]
+		if len(set(parcel_indices) & set(img_indices)) >= min_overlap:
+			epicenter_candidates.append(i)
+	
+	return epicenter_candidates
 
+def create_epicenter_thr_seedmap_dict(candidates_list, percentile_threshold_level):
+	"""
+	"""
+	epicenter_seedmap_dict_all = pickle.load(open('/data/mridata/jdeng/tools/find_epicenter/epicenter_seedmap_dict.p', 'r'))
+	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in candidates_list}
+	
+	epicenter_thr_seedmap_dict = {i: threshold_image_using_percentile_threshold(epicenter_seedmap_dict[i], percentile_threshold_level) for i in epicenter_seedmap_dict.keys()}
+	
+	return epicenter_thr_seedmap_dict
+	
 def dicecoef(a, b):
 	"""Return the Dice coefficient of a and b.
 
@@ -90,64 +90,19 @@ def dicecoef(a, b):
 		assert total > 0
 		return round((overlap * 2.0) / total, 3)
 
-def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
-    """Return the parcel that is the epicenter for a subject.
-    
-    Parameters
-    ----------
-    wmap_path : string
-        The absolute path to the wmap.
-    w_thr : int
-        The lower w-score threshold of the wmap, inclusive.
-    n_overlap : int
-        The minimum number of overlapping voxels between the wmap and a parcel for that parcel to be considered as an epicenter candidate.
-    FC_thr : int
-        The lower percentile threshold of the parcel-seeded mean functional connectivity seed maps, inclusive.
-    mask_path : string, optional
-        The absolute path to the image which will be used to mask the wmap.
-        
-    Returns
-    -------
-    out : string
-        The indices of the parcels with the best-fitting seed maps to the wmap and their respective Dice coefficients.
-    """
-    
-    # Mask and threshold wmap
-    wmap = nib.load(wmap_path).get_data()
-    thr = wmap.ravel() >= w_thr
-    mask = nib.load(mask_path).get_data()
-    mask = np.ma.make_mask(mask.ravel())
-    mask_thr = np.logical_and(mask, thr)
-    mask_thr_wmap = np.where(mask_thr == True)[0]
-    
-    # Find parcels that contain at least "n_overlap" voxels of overlap with the masked and thresholded wmap and keep their FC seed maps
-    for i in L.keys():
-        parcel = L[i].ravel()
-        parcel = np.nonzero(parcel)[0]
-        if len(set(parcel) & set(mask_thr_wmap)) >= n_overlap:
-            # Replace parcel with seed map data
-            L[i] = nib.load('/data/mridata/jdeng/sd_bvftd/100_controls/1ST_vol_%s/spmT_0001.nii' % i).get_data().ravel()
-        else:
-            # otherwise remove parcel from consideration as epicenter
-            del L[i]
-        
-    # Threshold each seed map
-    for i in L.keys():
-        # FC_thr is percentile cutoff
-        FC_thr_val = np.percentile(L[i][L[i] != 0], FC_thr)
-        L[i] = np.nonzero(L[i] >= FC_thr_val)[0]
+def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
+	"""
+	"""
+	epicenter_dicecoef_dict = {i: dicecoef(img_indices, epicenter_thr_seedmap_dict[i]) for i in epicenter_thr_seedmap_dict.keys()}
 
-    # Get the best-fitting thresholded seed maps to the masked & thresholded wmap by taking the thresholded seed maps
-    # with the greatest Dice coefficients to the wmap
-    for i in L.keys():
-        L[i] = dicecoef(mask_thr_wmap, L[i])
-        
-    # Separate L into a list of parcel IDs and a list of Dice coefficients, then sort them
-    parcel_IDs = L.keys()
-    dice_coefficients = L.values()
-    sorted_indices = np.argsort(dice_coefficients)
-    
-    # top 10 epicenters and Dice coefficients
-    pid = wmap_path.split("/")[4].split("_")[0]
-    date = wmap_path.split("/")[4].split("_")[1]
-    print '%s %s' % (pid, date), np.array(parcel_IDs)[sorted_indices][-1:-11:-1], np.array(dice_coefficients)[sorted_indices][-1:-11:-1]
+	epicenters = epicenter_dicecoef_dict.keys()
+	dice_coefs = epicenter_dicecoef_dict.values()
+	sorted_indices = np.argsort(dice_coefs)
+
+	print '%s %s' % (np.array(epicenters)[sorted_indices][-1:-11:-1], np.array(dice_coefs)[sorted_indices][-1:-11:-1])
+
+if __name__ == '__main__':
+	mask_thr_indices = return_indices_of_masked_thr_voxels('tests/wmap.nii', 2.0)
+	epicenter_candidates = filter_epicenters_by_parcel_overlap(mask_thr_indices, 10)
+	epicenter_thr_seedmap_dict = create_epicenter_thr_seedmap_dict(epicenter_candidates, 90)
+	find_epicenter(mask_thr_indices, epicenter_thr_seedmap_dict)
