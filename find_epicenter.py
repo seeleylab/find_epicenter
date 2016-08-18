@@ -1,28 +1,97 @@
 import nibabel as nib
 import numpy as np
 
-# Store the parcels in a dictionary with key-value pairs corresponding to parcel ID and parcel absolute path
-L = {x: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % x).get_data() for x in range(1, 273)}
+def mask_image(img_path, mask_path):
+	"""Mask image.
+
+	Parameters
+	----------
+	img_path : str
+		Absolute path to a .nii image.
+	mask_path : str
+		Absolute path to a .nii mask image.
+
+	Returns
+	-------
+	masked_image: ndarray
+		Masked image as a 1D array of voxel values.
+	"""
+	raw_image = nib.load(img_path).get_data()
+	mask = nib.load(mask_path).get_data()
+	mask = np.ma.make_mask(mask)
+	masked_image = raw_image[mask]
+	return masked_image
+
+def threshold_image(img_data, threshold_level):
+	"""Threshold image.
+
+	Parameters
+	----------
+	img_data : ndarray
+		Image in the form of a 1D array of voxel values.
+	threshold_level : int or float
+		Defines cutoff for which any voxels greater than or equal to this value will be kept; otherwise the voxels will be zeroed out.
+
+	Returns
+	-------
+	thresholded_image: ndarray
+		Thresholded image as a 1D array of voxel values.
+	"""
+	thresholded_image = img_data[img_data >= threshold_level]
+	return thresholded_image
+
+def keep_if_overlap_by(img_data, min_overlap):
+	"""Keep the parcel as an epicenter candidate if it shares at least the specified number of voxels of overlap with the image.
+	
+	Parameters
+	----------
+	img_data : ndarray
+		Image in the form of a 1D array of voxel values.
+	min_overlap : int or float
+		Defines cutoff for which a parcel that overlaps the image by any number of voxels greater than or equal to this cutoff will be kept.
+
+	Returns
+	-------
+	epicenter_candidates : dict
+		Dictionary of candidate epicenters, with key-value pairs representing epicenter index and .
+	"""
+	parcel_dict = {parcel_index: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%d.nii' % parcel_index).get_data() for parcel_index in range(1, 274)}
+	
+	for i in parcel_dict.keys():
+		parcel = parcel_dict[i].ravel()
+		parcel = np.nonzero(parcel)[0]
+		if len(set(parcel) & set(mask_thr_wmap)) >= n_overlap:
+			# Replace parcel with seed map data
+			L[i] = nib.load('/data/mridata/jdeng/sd_bvftd/100_controls/1ST_vol_%s/spmT_0001.nii' % i).get_data().ravel()
+		else:
+			# otherwise remove parcel from consideration as epicenter
+			del L[i]
+	return
 
 def dicecoef(a, b):
-    """Returns the Dice coefficient of a and b.
-    
-    Parameters
-    ----------
-    a, b : lists or arrays
-    
-    Returns
-    -------
-    out : float
-        Dice coefficient of a and b
-    """
-    a_voxels = set(a)
-    b_voxels = set(b)
-    overlap = len(a_voxels & b_voxels)
-    return round(overlap * 2.0/(len(a_voxels) + len(b_voxels)), 3)
+	"""Return the Dice coefficient of a and b.
+
+	Parameters
+	----------
+	a, b : lists or arrays
+	
+	Returns
+	-------
+	out : float
+		Dice coefficient of a and b.
+	"""
+	if type(a) == str or type(b) == str:
+		raise(TypeError, 'This implementation of the Dice coefficient does not handle strings.')
+	else:
+		a_voxels = set(a)
+		b_voxels = set(b)
+		overlap = len(a_voxels & b_voxels)
+		total = len(a_voxels) + len(b_voxels)
+		assert total > 0
+		return round((overlap * 2.0) / total, 3)
 
 def find_epicenter(wmap_path, w_thr, n_overlap, FC_thr, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
-    """Returns the parcel that is the epicenter for a subject.
+    """Return the parcel that is the epicenter for a subject.
     
     Parameters
     ----------
