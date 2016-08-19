@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import pickle
+import sys
 
 def percentile_threshold(img_data, percentile_threshold_level):
 	"""Threshold image using a percentile threshold.
@@ -24,8 +25,7 @@ def percentile_threshold(img_data, percentile_threshold_level):
 	thresholded_image_indices = np.where(thresholded_image.ravel())[0]
 	return thresholded_image_indices
 
-def mask_and_absolute_threshold(img_path, threshold_level, mask_path='/data/'
-				'mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
+def mask_and_absolute_threshold(img_path, absolute_threshold_level, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
 	than or equal to a threshold.
 	
@@ -48,7 +48,7 @@ def mask_and_absolute_threshold(img_path, threshold_level, mask_path='/data/'
 	raw_image = nib.load(img_path).get_data().ravel()
 	mask = nib.load(mask_path).get_data().ravel()
 	in_mask_voxels_boolean = np.ma.make_mask(mask)
-	above_threshold_voxels_boolean = (raw_image >= threshold_level)
+	above_threshold_voxels_boolean = (raw_image >= absolute_threshold_level)
 	in_mask_and_above_threshold_voxels_boolean = in_mask_voxels_boolean & \
 											  above_threshold_voxels_boolean
 	in_mask_and_above_threshold_voxels_indices = \
@@ -105,7 +105,7 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		connectivity map that are greater than or equal to the threshold.
 	"""
 	epicenter_seedmap_dict_all = pickle.load(open('/data/mridata/jdeng/tools/'
-							'find_epicenter/epicenter_seedmap_dict.p', 'r'))
+							'find_epicenter/epicenter_seedmap_dict_all.p', 'r'))
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
@@ -167,9 +167,12 @@ def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
 					 np.array(dice_coefs)[sorted_indices][-1:-11:-1])
 
 if __name__ == '__main__':
-	mask_thr_indices = mask_and_absolute_threshold('tests/wmap.nii',
-											percentile_threshold_level=2.0)
-	epicenter_candidates = filter_parcels(mask_thr_indices, min_overlap=10)
+	mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
+											absolute_threshold_level=2.0)
+	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
+										  min_overlap=10)
 	epicenter_thr_seedmap_dict = \
-	create_epicenter_thr_seedmap_dict(epicenter_candidates, 90)
-	find_epicenter(mask_thr_indices, epicenter_thr_seedmap_dict)
+	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
+									  percentile_threshold_level=90)
+	find_epicenter(img_indices=mask_thr_indices,
+				   epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
