@@ -74,17 +74,22 @@ def test_both_inputs_are_empty_arrays():
 	assert_raises(AssertionError, dicecoef, a, b)
 
 def test_identical_wmaps():
-#	a = nib.load('wmap_for_testing.nii').get_data()
-#	a_indices = np.where(a >= 2) 
-#	b = nib.load('wmap_for_testing_plus_1.nii').get_data()
-#	b_indices = np.where(b >= 2)
-#	result = dicecoef(a, b)
-#	expected = 1.0
-#	assert_equal(result, expected)
-	pass
+	a = nib.load('wmap_gm_masked_abs_thr_at_2_using_fsl.nii').get_data().ravel()
+	a_indices = np.where(a != 0)[0]
+	b = nib.load('wmap_gm_masked_abs_thr_at_2_using_fsl.nii').get_data().ravel()
+	b_indices = np.where(b != 0)[0]
+	result = dicecoef(a_indices, b_indices)
+	expected = 1.0
+	assert_equal(result, expected)
 
 def test_different_wmaps():
-	pass
+	a = nib.load('wmap.nii').get_data().ravel()
+	a_indices = np.where(a > 0)[0]
+	b = nib.load('wmap_inverse_using_fsl.nii').get_data().ravel()
+	b_indices = np.where(b > 0)[0]
+	result = dicecoef(a_indices, b_indices)
+	expected = 0
+	assert_equal(result, expected)
 
 def test_str_and_str():
 	a = 'meow'
