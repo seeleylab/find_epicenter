@@ -4,14 +4,16 @@ import pickle
 import sys
 
 def percentile_threshold(img_data, percentile_threshold_level):
-	"""Threshold image using a percentile threshold.
+	"""Return indices of voxels in an image that are greater than or equal
+	to a percentile threshold.
 	Parameters
 	----------
 	img_data : ndarray
-		Voxel values of an image.
+		Values of every voxel in an image.
 	threshold_level : int or float
-		Percentile cutoff for which any voxels greater than or equal to this
-		value will be kept; otherwise the voxels will be zeroed out.
+		Percentile cutoff for which any voxels with values greater than or
+		equal to this value will be kept; otherwise the voxels will be
+		zeroed out.
 		
 	Returns
 	-------
@@ -25,17 +27,18 @@ def percentile_threshold(img_data, percentile_threshold_level):
 	thresholded_image_indices = np.where(thresholded_image.ravel())[0]
 	return thresholded_image_indices
 
-def mask_and_absolute_threshold(img_path, absolute_threshold_level, mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
+def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
+	mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
-	than or equal to a threshold.
+	than or equal to an absolute threshold.
 	
 	Parameters
 	----------
 	img_path : str
 		Absolute path to an image.
 	threshold_level : int or float
-		Absolute cutoff for which any voxels greater than or equal to this value
-		will be kept; otherwise the voxels will be zeroed out.
+		Absolute cutoff for which any voxels with values greater than or equal
+		to this value will be kept; otherwise the voxels will be zeroed out.
 	mask_path : str
 		Absolute path to a mask.
 		
