@@ -3,30 +3,6 @@ import numpy as np
 import pickle
 import sys
 
-def percentile_threshold(img_data, percentile_threshold_level):
-	"""Return indices of voxels in an image that are greater than or equal
-	to a percentile threshold.
-	Parameters
-	----------
-	img_data : ndarray
-		Values of every voxel in an image.
-	threshold_level : int or float
-		Percentile cutoff for which any voxels with values greater than or
-		equal to this value will be kept; otherwise the voxels will be
-		zeroed out.
-		
-	Returns
-	-------
-	thresholded_image_indices: 1darray
-		Indices of voxels in image that are greater than or equal to the
-		threshold.
-	"""
-	nonzero_img_data = img_data[img_data != 0]
-	img_threshold = np.percentile(nonzero_img_data, percentile_threshold_level)
-	thresholded_image = (img_data >= img_threshold)
-	thresholded_image_indices = np.where(thresholded_image.ravel())[0]
-	return thresholded_image_indices
-
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
 	mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
@@ -58,7 +34,7 @@ def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
 						np.where(in_mask_and_above_threshold_voxels_boolean)[0]
 	return in_mask_and_above_threshold_voxels_indices
 
-def filter_parcels(img_indices, min_overlap):
+def filter_parcels(img_indices, min_overlap, epicenter_parcel_dict):
 	"""Keep the parcel as an epicenter candidate if it shares at least the
 	specified number of voxels of overlap with the image.
 	
@@ -69,6 +45,8 @@ def filter_parcels(img_indices, min_overlap):
 	min_overlap : int or float
 		Defines cutoff for which a parcel that overlaps the image by any number
 		of voxels greater than or equal to this cutoff will be kept.
+	epicenter_parcel_dict : pickled dict
+		
 
 	Returns
 	-------
@@ -76,8 +54,7 @@ def filter_parcels(img_indices, min_overlap):
 		List of candidate epicenters.
 	"""
 	epicenter_candidates = []
-	epicenter_parcel_dict = pickle.load(open('/data/mridata/jdeng/tools/'
-								'find_epicenter/epicenter_parcel_dict.p', 'r'))
+	epicenter_parcel_dict = pickle.load(open(epicenter_parcel_dict, 'r'))
 	
 	for i in epicenter_parcel_dict.keys():
 		parcel = epicenter_parcel_dict[i].ravel()
@@ -86,6 +63,30 @@ def filter_parcels(img_indices, min_overlap):
 			epicenter_candidates.append(i)
 	
 	return epicenter_candidates
+
+def percentile_threshold(img_data, percentile_threshold_level):
+	"""Return indices of voxels in an image that are greater than or equal
+	to a percentile threshold.
+	Parameters
+	----------
+	img_data : ndarray
+		Values of every voxel in an image.
+	threshold_level : int or float
+		Percentile cutoff for which any voxels with values greater than or
+		equal to this value will be kept; otherwise the voxels will be
+		zeroed out.
+		
+	Returns
+	-------
+	thresholded_image_indices: 1darray
+		Indices of voxels in image that are greater than or equal to the
+		threshold.
+	"""
+	nonzero_img_data = img_data[img_data != 0]
+	img_threshold = np.percentile(nonzero_img_data, percentile_threshold_level)
+	thresholded_image = (img_data >= img_threshold)
+	thresholded_image_indices = np.where(thresholded_image.ravel())[0]
+	return thresholded_image_indices
 
 def create_epicenter_thr_seedmap_dict(candidates_list,
 									  percentile_threshold_level):
@@ -108,7 +109,7 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		connectivity map that are greater than or equal to the threshold.
 	"""
 	epicenter_seedmap_dict_all = pickle.load(open('/data/mridata/jdeng/tools/'
-							'find_epicenter/epicenter_seedmap_dict_all.p', 'r'))
+			'find_epicenter/find_epicenter/epicenter_seedmap_dict_all.p', 'r'))
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
@@ -173,7 +174,8 @@ if __name__ == '__main__':
 	mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
 											absolute_threshold_level=2.0)
 	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
-										  min_overlap=10)
+		min_overlap=10, epicenter_parcel_dict='/data/mridata/jdeng/tools/'
+		'find_epicenter/find_epicenter/epicenter_parcel_dict.p')
 	epicenter_thr_seedmap_dict = \
 	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
 									  percentile_threshold_level=90)
