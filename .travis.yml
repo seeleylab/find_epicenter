@@ -12,7 +12,7 @@ python:
 install: "pip install -r requirements.txt"
 
 # command to run tests
-script: pwd && py.test
+script: pwd && ls && py.test
 
 branches:
   only:
