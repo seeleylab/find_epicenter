@@ -1,4 +1,4 @@
-from find_epicenter import percentile_threshold, mask_and_absolute_threshold, filter_parcels, create_epicenter_thr_seedmap_dict, find_epicenter
+from find_epicenter.find_epicenter import percentile_threshold, mask_and_absolute_threshold, filter_parcels, create_epicenter_thr_seedmap_dict, find_epicenter
 import nibabel as nib
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
