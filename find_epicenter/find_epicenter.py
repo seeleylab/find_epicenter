@@ -4,7 +4,7 @@ import pickle
 import sys
 
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
-	mask_path='/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'):
+	mask_path='find_epicenter/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
 	than or equal to an absolute threshold.
 	
@@ -108,8 +108,8 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		Epicenters and the indices of voxels in the epicenter-seeded functional
 		connectivity map that are greater than or equal to the threshold.
 	"""
-	epicenter_seedmap_dict_all = pickle.load(open('/data/mridata/jdeng/tools/'
-			'find_epicenter/find_epicenter/epicenter_seedmap_dict_all.p', 'r'))
+	epicenter_seedmap_dict_all = pickle.load(open('find_epicenter/'
+										'epicenter_seedmap_dict_all.p', 'r'))
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
@@ -174,8 +174,8 @@ if __name__ == '__main__':
 	mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
 											absolute_threshold_level=2.0)
 	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
-		min_overlap=10, epicenter_parcel_dict='/data/mridata/jdeng/tools/'
-		'find_epicenter/find_epicenter/epicenter_parcel_dict.p')
+		min_overlap=10, epicenter_parcel_dict='find_epicenter/'
+									'epicenter_parcel_dict.p')
 	epicenter_thr_seedmap_dict = \
 	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
 									  percentile_threshold_level=90)

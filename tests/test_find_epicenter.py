@@ -3,8 +3,6 @@ import nibabel as nib
 import numpy as np
 from numpy.testing.utils import assert_allclose, assert_equal
 
-mask = '/data/mridata/jbrown/brains/gm_mask/merged_ho_cereb_stn_comb.nii'
-
 def test_percentile_threshold():
 	img = nib.load('tests/100_avg_vol_1_seedmap.nii').get_data()
 	result = percentile_threshold(img, 90)
