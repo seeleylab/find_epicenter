@@ -1,4 +1,4 @@
-from find_epicenter.find_epicenter import dicecoef
+from find_epicenter import dicecoef
 import numpy as np
 import nibabel as nib
 import random

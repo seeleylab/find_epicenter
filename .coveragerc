@@ -1,0 +1,4 @@
+[run]
+omit = 
+	find_epicenter/make_pickled_dicts.py 
+	tests/*

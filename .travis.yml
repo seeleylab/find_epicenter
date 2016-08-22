@@ -5,8 +5,6 @@ python:
 branches:
   only:
   - master
-sudo: required
-before_install:
-  - sudo apt-get install tree
 install: "pip install -r requirements.txt"
-script: pwd && tree && py.test
+before_script: export PYTHONPATH=$PYTHONPATH:$(pwd)
+script: pwd && ls && py.test
