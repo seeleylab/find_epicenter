@@ -4,7 +4,7 @@ import pickle
 import sys
 
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
-	mask_path='find_epicenter/merged_ho_cereb_stn_comb.nii'):
+	mask_path='merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
 	than or equal to an absolute threshold.
 	
@@ -29,12 +29,12 @@ def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
 	in_mask_voxels_boolean = np.ma.make_mask(mask)
 	above_threshold_voxels_boolean = (raw_image >= absolute_threshold_level)
 	in_mask_and_above_threshold_voxels_boolean = in_mask_voxels_boolean & \
-											  above_threshold_voxels_boolean
+			above_threshold_voxels_boolean
 	in_mask_and_above_threshold_voxels_indices = \
-						np.where(in_mask_and_above_threshold_voxels_boolean)[0]
+			np.where(in_mask_and_above_threshold_voxels_boolean)[0]
 	return in_mask_and_above_threshold_voxels_indices
 
-def filter_parcels(img_indices, min_overlap, epicenter_parcel_dict):
+def filter_parcels(img_indices, min_overlap):
 	"""Keep the parcel as an epicenter candidate if it shares at least the
 	specified number of voxels of overlap with the image.
 	
@@ -46,7 +46,6 @@ def filter_parcels(img_indices, min_overlap, epicenter_parcel_dict):
 		Defines cutoff for which a parcel that overlaps the image by any number
 		of voxels greater than or equal to this cutoff will be kept.
 	epicenter_parcel_dict : pickled dict
-		
 
 	Returns
 	-------
@@ -54,7 +53,8 @@ def filter_parcels(img_indices, min_overlap, epicenter_parcel_dict):
 		List of candidate epicenters.
 	"""
 	epicenter_candidates = []
-	epicenter_parcel_dict = pickle.load(open(epicenter_parcel_dict, 'r'))
+	with open('epicenter_parcel_dict.p', 'r') as f:
+		epicenter_parcel_dict = pickle.load(f)
 	
 	for i in epicenter_parcel_dict.keys():
 		parcel = epicenter_parcel_dict[i].ravel()
@@ -108,8 +108,8 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		Epicenters and the indices of voxels in the epicenter-seeded functional
 		connectivity map that are greater than or equal to the threshold.
 	"""
-	epicenter_seedmap_dict_all = pickle.load(open('find_epicenter/'
-										'epicenter_seedmap_dict_all.p', 'r'))
+	with open('epicenter_seedmap_dict_all.p', 'r') as f:
+		epicenter_seedmap_dict_all = pickle.load(f)
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
@@ -167,17 +167,16 @@ def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
 	dice_coefs = epicenter_dicecoef_dict.values()
 	sorted_indices = np.argsort(dice_coefs)
 
-	print '%s %s' % (np.array(epicenters)[sorted_indices][-1:-11:-1],
+	return '%s %s' % (np.array(epicenters)[sorted_indices][-1:-11:-1],
 					 np.array(dice_coefs)[sorted_indices][-1:-11:-1])
 
 if __name__ == '__main__':
 	mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
-											absolute_threshold_level=2.0)
+				absolute_threshold_level=2.0)
 	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
-		min_overlap=10, epicenter_parcel_dict='find_epicenter/'
-									'epicenter_parcel_dict.p')
+		min_overlap=10)
 	epicenter_thr_seedmap_dict = \
 	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
-									  percentile_threshold_level=90)
-	find_epicenter(img_indices=mask_thr_indices,
-				   epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
+			percentile_threshold_level=90)
+	print sys.argv[1],find_epicenter(img_indices=mask_thr_indices,
+			epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
