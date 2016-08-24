@@ -4,7 +4,7 @@ import pickle
 import sys
 
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
-	mask_path='merged_ho_cereb_stn_comb.nii'):
+	mask_path='find_epicenter/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
 	than or equal to an absolute threshold.
 	
@@ -53,7 +53,7 @@ def filter_parcels(img_indices, min_overlap):
 		List of candidate epicenters.
 	"""
 	epicenter_candidates = []
-	with open('epicenter_parcel_dict.p', 'r') as f:
+	with open('find_epicenter/epicenter_parcel_dict.p', 'r') as f:
 		epicenter_parcel_dict = pickle.load(f)
 	
 	for i in epicenter_parcel_dict.keys():
@@ -108,7 +108,7 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		Epicenters and the indices of voxels in the epicenter-seeded functional
 		connectivity map that are greater than or equal to the threshold.
 	"""
-	with open('epicenter_seedmap_dict_all_v2.p', 'r') as f:
+	with open('find_epicenter/epicenter_seedmap_dict_all_v2.p', 'r') as f:
 		epicenter_seedmap_dict_all_v2 = pickle.load(f)
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all_v2[i] for i in\
 							  candidates_list}
