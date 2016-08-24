@@ -110,8 +110,8 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 	"""
 	with open('epicenter_seedmap_dict_all.p', 'r') as f:
 		epicenter_seedmap_dict_all = pickle.load(f)
-	epicenter_seedmap_dict_all = pickle.load(open('find_epicenter/'
-										'epicenter_seedmap_dict_all.p', 'r'))
+	epicenter_seedmap_dict_all = pickle.load(open\
+									('epicenter_seedmap_dict_all.p', 'r'))
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
@@ -162,7 +162,7 @@ def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
 		Sorted epicenters and the Dice coefficients of their functional
 		connectivity maps to the image.
 	"""
-	epicenter_dicecoef_dict = {i: dicecoef(img_indices,
+	epicenter_dicecoef_dict = {i: dicecoef(img_indices, \
 	epicenter_thr_seedmap_dict[i]) for i in epicenter_thr_seedmap_dict.keys()}
 
 	epicenters = epicenter_dicecoef_dict.keys()
@@ -180,5 +180,7 @@ if __name__ == '__main__':
 	epicenter_thr_seedmap_dict = \
 	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
 			percentile_threshold_level=90)
-	print sys.argv[1],find_epicenter(img_indices=mask_thr_indices,
+	results = find_epicenter(img_indices=mask_thr_indices,
 			epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
+	with open(sys.argv[1].split('/SPM12_SEG_Full')[0]+'/epicenters.txt', 'w') as f:
+		f.write(sys.argv[1] + ' ' + results)
