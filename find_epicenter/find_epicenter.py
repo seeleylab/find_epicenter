@@ -110,6 +110,8 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 	"""
 	with open('epicenter_seedmap_dict_all.p', 'r') as f:
 		epicenter_seedmap_dict_all = pickle.load(f)
+	epicenter_seedmap_dict_all = pickle.load(open('find_epicenter/'
+										'epicenter_seedmap_dict_all.p', 'r'))
 	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
 							  candidates_list}
 	
