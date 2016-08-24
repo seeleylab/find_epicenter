@@ -108,9 +108,9 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		Epicenters and the indices of voxels in the epicenter-seeded functional
 		connectivity map that are greater than or equal to the threshold.
 	"""
-	with open('epicenter_seedmap_dict_all.p', 'r') as f:
-		epicenter_seedmap_dict_all = pickle.load(f)
-	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all[i] for i in
+	with open('epicenter_seedmap_dict_all_v2.p', 'r') as f:
+		epicenter_seedmap_dict_all_v2 = pickle.load(f)
+	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all_v2[i] for i in\
 							  candidates_list}
 	
 	epicenter_thr_seedmap_dict = \
