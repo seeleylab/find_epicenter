@@ -171,14 +171,17 @@ def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
 					 np.array(dice_coefs)[sorted_indices][-1:-11:-1])
 
 if __name__ == '__main__':
-	mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
-				absolute_threshold_level=2.0)
-	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
-		min_overlap=10)
-	epicenter_thr_seedmap_dict = \
-	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
-			percentile_threshold_level=90)
-	results = find_epicenter(img_indices=mask_thr_indices,
-			epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
-	with open(sys.argv[1].split('/SPM12_SEG_Full')[0]+'/epicenters.txt', 'w') as f:
-		f.write(sys.argv[1] + ' ' + results)
+	if len(sys.argv) != 2:
+		print 'Usage: python find_epicenter.py path/to/image/to/find/epicenter/for'
+	else:
+		mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
+					absolute_threshold_level=2.0)
+		epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
+			min_overlap=10)
+		epicenter_thr_seedmap_dict = \
+		create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
+				percentile_threshold_level=90)
+		results = find_epicenter(img_indices=mask_thr_indices,
+				epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
+		with open(sys.argv[1].split('/wmap_time')[0]+'/epicenters.txt', 'w') as f:
+			f.write(sys.argv[1] + ' ' + results)
