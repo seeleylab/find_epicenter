@@ -7,3 +7,5 @@ __pycache__
 *.p
 .coverage
 *.swp*
+find_epicenter/pickles
+find_epicenter/cPickles

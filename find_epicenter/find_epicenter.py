@@ -53,13 +53,12 @@ def filter_parcels(img_indices, min_overlap):
 		List of candidate epicenters.
 	"""
 	epicenter_candidates = []
-	with open('find_epicenter/epicenter_parcel_dict.p', 'r') as f:
+	with open('find_epicenter/epicenter_parcelindices_dict.p', 'r') as f:
 		epicenter_parcel_dict = pickle.load(f)
 	
 	for i in epicenter_parcel_dict.keys():
-		parcel = epicenter_parcel_dict[i].ravel()
-		parcel_indices = np.nonzero(parcel)[0]
-		if len(set(parcel_indices) & set(img_indices)) >= min_overlap:
+		parcel = epicenter_parcel_dict[i]
+		if len(set(parcel) & set(img_indices)) >= min_overlap:
 			epicenter_candidates.append(i)
 	
 	return epicenter_candidates
