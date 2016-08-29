@@ -9,3 +9,5 @@ __pycache__
 *.swp*
 find_epicenter/pickles
 find_epicenter/cPickles
+find_epicenter/*.json
+find_epicenter/customserializer.py*

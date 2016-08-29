@@ -1,4 +1,5 @@
 [run]
 omit = 
 	find_epicenter/make_pickled_dicts.py 
+	find_epicenter/customserializer.py
 	tests/*
