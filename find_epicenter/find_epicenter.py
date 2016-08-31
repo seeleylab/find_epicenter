@@ -1,6 +1,7 @@
 import nibabel as nib
 import numpy as np
 import pickle
+from multiprocessing import Lock, Pool
 import sys
 
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
@@ -142,11 +143,17 @@ def dicecoef(a, b):
 		dc = (overlap * 2.0) / total
 		return round(dc, 3)
 
-def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
-	"""Find the best-fitting epicenter(s) for the image.
+lock = Lock()
+
+def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict):
+	"""Find the Dice coefficient between the image and each epicenter's
+	masked+thresholded functional connectivty map and print the top
+	epicenters with the highest Dice coefficients.
 	
 	Parameters
 	----------
+	img_path : str
+		Absolute path to an image.
 	img_indices : 1darray
 		Indices of voxels in the image.
 	epicenter_thr_seedmap_dict : dict
@@ -165,22 +172,30 @@ def find_epicenter(img_indices, epicenter_thr_seedmap_dict):
 	epicenters = epicenter_dicecoef_dict.keys()
 	dice_coefs = epicenter_dicecoef_dict.values()
 	sorted_indices = np.argsort(dice_coefs)
-
-	return '%s %s' % (np.array(epicenters)[sorted_indices][-1:-11:-1],
-					 np.array(dice_coefs)[sorted_indices][-1:-11:-1])
+	lock.acquire()
+	with open('/data/mridata/jdeng/sd_bvftd/v2/multiprocessing_epicenter_results.txt',
+			  'a') as f:
+		f.write('%s %s %s' % (img_path,
+							  np.array(epicenters)[sorted_indices][-1:-11:-1],
+							  np.array(dice_coefs)[sorted_indices][-1:-11:-1]))
+		f.write('\n')
+	lock.release()
+	
+def find_epicenter(subj):
+	mask_thr_indices = mask_and_absolute_threshold(img_path=subj,
+					absolute_threshold_level=2.0)
+	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
+			min_overlap=10)
+	epicenter_thr_seedmap_dict = \
+	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
+				percentile_threshold_level=90)
+	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
+					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
 
 if __name__ == '__main__':
-	if len(sys.argv) != 2:
-		print 'Usage: python find_epicenter.py path/to/image/to/find/epicenter/for'
-	else:
-		mask_thr_indices = mask_and_absolute_threshold(img_path=sys.argv[1],
-					absolute_threshold_level=2.0)
-		epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
-			min_overlap=10)
-		epicenter_thr_seedmap_dict = \
-		create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
-				percentile_threshold_level=90)
-		results = find_epicenter(img_indices=mask_thr_indices,
-				epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
-		with open(sys.argv[1].split('/wmap_time')[0]+'/epicenters.txt', 'w') as f:
-			f.write(sys.argv[1] + ' ' + results)
+	with open(sys.argv[1], 'r') as f:
+		subjs = [line.strip() for line in f]
+	pool = Pool(processes=16)
+	pool.map(find_epicenter, subjs)
+	pool.close()
+	pool.join()
