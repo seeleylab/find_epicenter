@@ -173,7 +173,7 @@ def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict):
 	dice_coefs = epicenter_dicecoef_dict.values()
 	sorted_indices = np.argsort(dice_coefs)
 	lock.acquire()
-	with open('/data/mridata/jdeng/sd_bvftd/v2/multiprocessing_epicenter_results.txt',
+	with open('/data/mridata/jdeng/sd_bvftd/v3_new_registration/bvsd_epicenters_top10_run3.txt',
 			  'a') as f:
 		f.write('%s %s %s' % (img_path,
 							  np.array(epicenters)[sorted_indices][-1:-11:-1],
@@ -182,6 +182,18 @@ def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict):
 	lock.release()
 	
 def find_epicenter(subj):
+	"""Return the top epicenters.
+	
+	Parameters
+	----------
+	img_path : str
+		Absolute path to an image.
+		
+	Returns
+	-------
+	out : str
+		Top epicenters and Dice coefficients.
+	"""
 	mask_thr_indices = mask_and_absolute_threshold(img_path=subj,
 					absolute_threshold_level=2.0)
 	epicenter_candidates = filter_parcels(img_indices=mask_thr_indices,
@@ -195,7 +207,7 @@ def find_epicenter(subj):
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
 		subjs = [line.strip() for line in f]
-	pool = Pool(processes=16)
+	pool = Pool(processes=10)
 	pool.map(find_epicenter, subjs)
 	pool.close()
 	pool.join()
