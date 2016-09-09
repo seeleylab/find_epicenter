@@ -145,7 +145,8 @@ def dicecoef(a, b):
 
 lock = Lock()
 
-def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict):
+def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict,\
+						 outfile):
 	"""Find the Dice coefficient between the image and each epicenter's
 	masked+thresholded functional connectivty map and print the top
 	epicenters with the highest Dice coefficients.
@@ -173,8 +174,7 @@ def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict):
 	dice_coefs = epicenter_dicecoef_dict.values()
 	sorted_indices = np.argsort(dice_coefs)
 	lock.acquire()
-	with open('/data/mridata/jdeng/sd_bvftd/v3_new_registration/bvsd_epicenters_top10_run3.txt',
-			  'a') as f:
+	with open(outfile, 'a') as f:
 		f.write('%s %s %s' % (img_path,
 							  np.array(epicenters)[sorted_indices][-1:-11:-1],
 							  np.array(dice_coefs)[sorted_indices][-1:-11:-1]))
@@ -202,7 +202,8 @@ def find_epicenter(subj):
 	create_epicenter_thr_seedmap_dict(candidates_list=epicenter_candidates,
 				percentile_threshold_level=90)
 	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
-					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict)
+					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict,\
+					outfile='/data/mridata/jdeng/sd_bvftd/v3_new_registration/bvsd_epicenters_top10.txt')
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
