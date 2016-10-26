@@ -167,6 +167,8 @@ def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict,\
 		Sorted epicenters and the Dice coefficients of their functional
 		connectivity maps to the image.
 	"""
+	np.set_printoptions(linewidth=np.inf)
+	
 	epicenter_dicecoef_dict = {i: dicecoef(img_indices, \
 	epicenter_thr_seedmap_dict[i]) for i in epicenter_thr_seedmap_dict.keys()}
 
@@ -176,8 +178,8 @@ def write_top_epicenters(img_path, img_indices, epicenter_thr_seedmap_dict,\
 	lock.acquire()
 	with open(outfile, 'a') as f:
 		f.write('%s %s %s' % (img_path,
-							  np.array(epicenters)[sorted_indices][-1:-11:-1],
-							  np.array(dice_coefs)[sorted_indices][-1:-11:-1]))
+							  np.array(epicenters)[sorted_indices][::-1],
+							  np.array(dice_coefs)[sorted_indices][::-1]))
 		f.write('\n')
 	lock.release()
 	
@@ -203,7 +205,7 @@ def find_epicenter(subj):
 				percentile_threshold_level=90)
 	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
 					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict,\
-					outfile='/data/mridata/jdeng/sd_bvftd/v3_new_registration/bvsd_epicenters_top10.txt')
+					outfile='/data/mridata/jdeng/sd_bvftd/v2/bvsd_epicenters_all.txt')
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
