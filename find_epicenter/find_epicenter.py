@@ -205,7 +205,7 @@ def find_epicenter(subj):
 				percentile_threshold_level=90)
 	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
 					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict,\
-					outfile='/data/mridata/jdeng/sd_bvftd/v2/bvsd_epicenters_all.txt')
+					outfile='/data/mridata/jdeng/sd_bvftd/v4/bvsd_epicenters_all.txt')
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
