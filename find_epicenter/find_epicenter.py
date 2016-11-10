@@ -108,14 +108,14 @@ def create_epicenter_thr_seedmap_dict(candidates_list,
 		Epicenters and the indices of voxels in the epicenter-seeded functional
 		connectivity map that are greater than or equal to the threshold.
 	"""
-	with open('find_epicenter/epicenter_seedmap_dict_all_v2.p', 'r') as f:
-		epicenter_seedmap_dict_all_v2 = pickle.load(f)
-	epicenter_seedmap_dict = {i: epicenter_seedmap_dict_all_v2[i] for i in\
+	with open('find_epicenter/epicenter_seedmap_dict_all_75hc.p', 'r') as f:
+		epicenter_seedmap_dict = pickle.load(f)
+	filtered_epicenter_seedmap_dict = {i: epicenter_seedmap_dict[i] for i in\
 							  candidates_list}
 	
 	epicenter_thr_seedmap_dict = \
-	{i: percentile_threshold(epicenter_seedmap_dict[i],
-	percentile_threshold_level) for i in epicenter_seedmap_dict.keys()}
+	{i: percentile_threshold(filtered_epicenter_seedmap_dict[i],
+	percentile_threshold_level) for i in filtered_epicenter_seedmap_dict.keys()}
 	
 	return epicenter_thr_seedmap_dict
 	
@@ -205,7 +205,7 @@ def find_epicenter(subj):
 				percentile_threshold_level=90)
 	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
 					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict,\
-					outfile='/data/mridata/jdeng/sd_bvftd/v4/bvsd_epicenters_all.txt')
+					outfile='/data/mridata/jdeng/sd_bvftd/v2/75_controls/bvsd_epicenters_all.txt')
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
