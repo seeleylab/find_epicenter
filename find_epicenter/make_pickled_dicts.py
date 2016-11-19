@@ -28,10 +28,17 @@ lut = dict(zip(parcels_252_new_indices, parcels_252_orig_indices))
 
 epicenter_parcel_dict_252_75hc = {parcel_index: nib.load('/data/mridata/jbrown/brains/brainnetome_suit_comb/vol_%s.nii'
                                     % lut[parcel_index]).get_data() for parcel_index in lut.keys()}
-with open('epicenter_parcel_dict_252_75hc.p', 'w') as f:
-  pickle.dump(epicenter_parcel_dict_252_75hc, f)
+
+epicenter_parcelindices_dict_252_75hc = {k: np.where(v.flatten() > 0)[0] for
+                                         k, v in epicenter_parcel_dict_252_75hc.items()}
+
+with open('epicenter_parcelindices_dict_252_75hc.p', 'w') as f:
+  pickle.dump(epicenter_parcelindices_dict_252_75hc, f)
+
+
 
 epicenter_seedmap_dict_252_75hc = {parcel_index: nib.load('/data/mridata/jdeng/sd_bvftd/75_controls/1ST_vol_%s/spmT_0001.nii'
                                     % lut[parcel_index]).get_data() for parcel_index in lut.keys()}
+
 with open('epicenter_seedmap_dict_252_75hc.p', 'w') as f:
   pickle.dump(epicenter_seedmap_dict_252_75hc, f)
