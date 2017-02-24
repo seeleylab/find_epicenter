@@ -4,6 +4,7 @@ import pickle
 from multiprocessing import Lock, Pool
 import sys
 
+
 def mask_and_absolute_threshold(img_path, absolute_threshold_level, \
 	mask_path='find_epicenter/merged_ho_cereb_stn_comb.nii'):
 	"""Return indices of voxels in an image that are within a mask and greater
@@ -205,7 +206,7 @@ def find_epicenter(subj):
 				percentile_threshold_level=90)
 	write_top_epicenters(img_path=subj, img_indices=mask_thr_indices,\
 					epicenter_thr_seedmap_dict=epicenter_thr_seedmap_dict,\
-					outfile='/data/mridata/jdeng/sd_bvftd/v4/252_epicenters/bvsd_epicenters_252.txt')
+					outfile='/data/mridata/jdeng/epicenters.txt')
 
 if __name__ == '__main__':
 	with open(sys.argv[1], 'r') as f:
@@ -214,3 +215,4 @@ if __name__ == '__main__':
 	pool.map(find_epicenter, subjs)
 	pool.close()
 	pool.join()
+
